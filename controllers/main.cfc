@@ -1,7 +1,7 @@
 /*
  Adventure Cycling Association
  John Sieber 8/1/2014
- Integration for a Reorder Report
+ Integration for ACA Sales Reports
  
 
 Notes:
@@ -41,8 +41,48 @@ component extends="Slatwall.org.Hibachi.HibachiController" {
 	 
 	 }
 	 
+	 public function itemValuation (required struct rc) {
+	 	
+	 	// if (structKeyExists(rc, "submit")){
+	 		// writeDump(var="#rc#", abort=true, top=1);
+		 	var result = "";
+		 	var itemValuationQuery = new query();
+		 	itemValuationQuery.setDatasource('#application.configBean.getReadOnlyDatasource()#');
+		 	// itemValuationQuery.addParam(name="startNumber",value="#rc.startNumber#",cfsqltype="cf_sql_varchar");
+		 	// itemValuationQuery.addParam(name="endNumber",value="#rc.endNumber#",cfsqltype="cf_sql_varchar");
+		 		result = itemValuationQuery.execute(sql="SELECT SwSku.skuID,
+		 					 								   SwSku.skuCode,
+		 					 								   SwSku.calculatedQATS as skuQATS,
+		 					 								   SwProduct.productID,
+															   SwProduct.productName,
+															   SwOption.optionName,
+															   SwProductType.productTypeID,
+															   SwProductType.productTypeName,
+															   SwAttributeValue.attributeValue as unitCost,
+															   (SwAttributeValue.attributeValue * SwSku.calculatedQATS) as extendedCost
+		 												FROM swsku
+		 												INNER JOIN
+															SwProduct on SwSku.productID = SwProduct.productID
+		 												INNER JOIN
+															SwProductType on SwProduct.productTypeID = SwProductType.productTypeID
+														LEFT JOIN
+															SwSkuOption on SwSku.skuID = SwSkuOption.skuID
+														LEFT JOIN
+															SwOption on SwSkuOption.optionID = SwOption.optionID
+														LEFT JOIN
+															SwattributeValue on SwSku.skuID = SwattributeValue.skuID
+														LEFT JOIN 
+															Swattribute on SwattributeValue.attributeID = Swattribute.attributeID
+														WHERE Swattribute.attributecode = 'unitCost' and Swsku.activeFlag = 1 and SwProduct.activeFlag = 1 and SwProduct.publishedFlag = 1 and SwSku.calculatedQATS > 0					
+														ORDER BY SwSku.skuCode;");
+		 		rc.itemValuationData = result.getResult();
+		 
+		 
+		 
+		//}
+	 }
+	 
 	 public function reorderReport (required struct rc) {
-	 	// writeDump(var="I'm here" abort=true);
 		var result = "";	
 		var theData = "";
 		var reOrderData = new query();
@@ -63,6 +103,8 @@ component extends="Slatwall.org.Hibachi.HibachiController" {
 												SwSku
 											LEFT JOIN
 												SwattributeValue on SwSku.skuID = SwattributeValue.skuID
+											LEFT JOIN 
+												Swattribute on SwattributeValue.attributeID = Swattribute.attributeID
 											LEFT JOIN
 												SwSkuOption on SwSku.skuID = SwSkuOption.skuID
 											LEFT JOIN
@@ -71,7 +113,7 @@ component extends="Slatwall.org.Hibachi.HibachiController" {
 												SwProduct on SwSku.productID = SwProduct.productID
 											INNER JOIN
 												SwProductType on SwProduct.productTypeID = SwProductType.productTypeID			
-											WHERE SwAttributeValue.attributeValue >= SwSku.calculatedQATS AND SwAttributeValue.attributeValue > 0
+											WHERE SwAttributeValue.attributeValue >= SwSku.calculatedQATS AND SwAttributeValue.attributeValue >= 0 AND SwAttribute.attributeCode = 'reorderQuantity'
 											ORDER BY SwSku.skuCode;");
 										rc.theData = result.getResult();
 											
