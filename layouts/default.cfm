@@ -43,59 +43,11 @@
     If you modify this program, you may extend this exception to your version 
     of the program, but you are not obligated to do so.
 
-	Notes:
-	
---->
-<!---
-
-    Slatwall - An Open Source eCommerce Platform
-    Copyright (C) ten24, LLC
-	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-	
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-	
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    
-    Linking this program statically or dynamically with other modules is
-    making a combined work based on this program.  Thus, the terms and
-    conditions of the GNU General Public License cover the whole
-    combination.
-	
-    As a special exception, the copyright holders of this program give you
-    permission to combine this program with independent modules and your 
-    custom code, regardless of the license terms of these independent
-    modules, and to copy and distribute the resulting program under terms 
-    of your choice, provided that you follow these specific guidelines: 
-
-	- You also meet the terms and conditions of the license of each 
-	  independent module 
-	- You must not alter the default display of the Slatwall name or logo from  
-	  any part of the application 
-	- Your custom code must not alter or create any files inside Slatwall, 
-	  except in the following directories:
-		/integrationServices/
-
-	You may copy and distribute the modified version of this program that meets 
-	the above guidelines as a combined work under the terms of GPL for this program, 
-	provided that you include the source code of that other code when and as the 
-	GNU GPL requires distribution of source code.
-    
-    If you modify this program, you may extend this exception to your version 
-    of the program, but you are not obligated to do so.
-
 Notes:
 
 --->
-
 <cfoutput>
+<cfif not structKeyExists(url, "print")>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -131,6 +83,9 @@ Notes:
 		<!--- New Angular Includes --->
 		<script type="text/javascript" src="#request.slatwallScope.getBaseURL()#/assets/js/angular.min.js"></script>
 		<script type="text/javascript" src="#request.slatwallScope.getBaseURL()#/assets/js/slatwall.js"></script>
+		
+		<!--- JS libraries specifically for reporting integration --->
+		<script type="text/javascript" src="#request.slatwallScope.getBaseURL()#/assets/js/jquery.tablesorter.min.js"></script>
 		
 		<cfif arrayLen($.slatwall.getPrintQueue()) and request.context.slatAction neq "admin:print.default">
 			<script type="text/javascript">
@@ -207,7 +162,7 @@ Notes:
 						<cfif arrayLen(local.integrationSubsystems)>
 							<cf_HibachiActionCallerDropdown title="#$.slatwall.rbKey('admin.default.integrations_nav')#" icon="random icon-white" type="nav">
 								<cfloop array="#local.integrationSubsystems#" index="local.intsys">
-									<cf_HibachiActionCaller action="#local.intsys.subsystem#:main.default" text="#local.intsys.name#" type="list">
+									<cf_HibachiActionCaller action="#local.intsys['subsystem']#:main.default" text="#local.intsys['name']#" type="list">
 								</cfloop>
 							</cf_HibachiActionCallerDropdown>
 						</cfif>
@@ -371,13 +326,6 @@ Notes:
 		</div>
 
 		<div class="container-fluid">
-			<cfif structKeyExists(url,"slatAction") AND url.slataction neq "aca_SalesReports:main">
-				<div class="row-fluid">
-					<div class="span12">
-						<a href="/Slatwall?slatAction=aca_SalesReports:main">Return to ACA Sales Report Main Menu</a>
-					</div>
-				</div>
-			</cfif>
 			<div class="row-fluid">
 				<div class="span12">
 					#body#
@@ -389,15 +337,15 @@ Notes:
 			<div class="modal-header"><a class="close" data-dismiss="modal">&times;</a><h3>#request.slatwallScope.rbKey('define.disabled')#</h3></div>
 			<div class="modal-body"></div>
 			<div class="modal-footer">
-				<a href="##" class="btn btn-inverse" data-dismiss="modal"><i class="icon-ok icon-white"></i> #request.slatwallScope.rbKey('define.ok')#</a>
+				<a href="##" class="btn btn-inverse" data-dismiss="modal" id="disabledOkLink"><i class="icon-ok icon-white"></i> #request.slatwallScope.rbKey('define.ok')#</a>
 			</div>
 		</div>
 		<div id="adminConfirm" class="modal">
 			<div class="modal-header"><a class="close" data-dismiss="modal">&times;</a><h3>#request.slatwallScope.rbKey('define.confirm')#</h3></div>
 			<div class="modal-body"></div>
 			<div class="modal-footer">
-				<a href="##" class="btn btn-inverse" data-dismiss="modal"><i class="icon-remove icon-white"></i> #request.slatwallScope.rbKey('define.no')#</a>
-				<a href="##" class="btn btn-primary"><i class="icon-ok icon-white"></i> #request.slatwallScope.rbKey('define.yes')#</a>
+				<a href="##" class="btn btn-inverse" data-dismiss="modal" id="confirmNoLink"><i class="icon-remove icon-white"></i> #request.slatwallScope.rbKey('define.no')#</a>
+				<a href="##" class="btn btn-primary" id="confirmYesLink"><i class="icon-ok icon-white"></i> #request.slatwallScope.rbKey('define.yes')#</a>
 			</div>
 		</div>
 
@@ -419,8 +367,14 @@ Notes:
 			</script>
 		</cfif>
 		--->
+<cfelse>
+	#body#
+
+</cfif>		
+		
+		
 	</body>
 </html>
-</cfoutput>
 
+</cfoutput>
 
