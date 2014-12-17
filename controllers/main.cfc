@@ -184,7 +184,7 @@ component extends="Slatwall.org.Hibachi.HibachiController" {
 														Swvendor on Swvendorproduct.vendorID = Swvendor.vendorID
 													INNER JOIN
 														SwProductType on SwProduct.productTypeID = SwProductType.productTypeID	
-													INNER JOIN 
+													LEFT JOIN 
 														SwBrand on SwProduct.brandID = SwBrand.brandID
 													WHERE SwattributeValueReOrderAmount.attributeValue >= SwSku.calculatedQATS AND SwattributeValueReOrderAmount.attributeValue >= 0
 													GROUP BY swSku.skuid
