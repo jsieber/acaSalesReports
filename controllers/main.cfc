@@ -18,12 +18,11 @@ component extends="Slatwall.org.Hibachi.HibachiController" {
 	 }
 	 
 	 public query function bestItemsQuery (required struct rc, required date startDate, required date endDate) {
-	 	
 	 	var result = "";
 	 	var bestItemsQuery = new query();
 	 	bestItemsQuery.setDatasource('#application.configBean.getReadOnlyDatasource()#');
-	 	bestItemsQuery.addParam(name="startDate",value="#arguments.startDate#",cfsqltype="cf_sql_date");
-		bestItemsQuery.addParam(name="endDate",value="#arguments.endDate#",cfsqltype="cf_sql_date");
+	 	bestItemsQuery.addParam(name="startDate",value="#arguments.startDate# 00:00:00",cfsqltype="cf_sql_timestamp");
+		bestItemsQuery.addParam(name="endDate",value="#arguments.endDate# 23:59:59",cfsqltype="cf_sql_timestamp");
 	 	result = bestItemsQuery.execute(sql="select Mem,Left(skuCode,2) AS SalesGroup, swsku.skuCode, Concat_WS('-',productName, OptionName) AS ProdName, Sum(quantity) AS NumSent, 
 												If(IsNull(NumRet),0,NumRet) AS NumRet,Sum(quantity)-If(IsNull(NumRet),0,NumRet) AS NumSold, 
 												Round((Sum(quantity*sworderitem.Price))/Sum(quantity),2) AS AvgCost, attributevalue AS UnitCost, Sum(quantity*attributevalue) AS COGS, 
