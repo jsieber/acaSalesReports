@@ -8,6 +8,11 @@ Notes:
 
 */
 component extends="Slatwall.org.Hibachi.HibachiController" {
+	 // Set security for plugin
+	 this.publicMethods=""; //Anyone can access
+	 this.anyAdminMethods="bestItems,getOpenPos,itemValuation,reorderReport,postageReport,vendorPOReport,postageReport"; //Any admin can access
+	 this.secureMethods="bestItems,getOpenPos,itemValuation,reorderReport,postageReport,vendorPOReport,postageReport"; //Only super admin and those who have access to this in permission group can access
+
 	 
 	 public function bestItems (){
 	 	if(structKeyExists(rc, "bestItemsStartDate") && structKeyExists(rc, "bestItemsEndDate")){
@@ -17,7 +22,7 @@ component extends="Slatwall.org.Hibachi.HibachiController" {
 	 	}
 	 }
 	 
-	 public query function bestItemsQuery (required struct rc, required date startDate, required date endDate) {
+	 private query function bestItemsQuery (required struct rc, required date startDate, required date endDate) {
 	 	var result = "";
 	 	var bestItemsQuery = new query();
 	 	bestItemsQuery.setDatasource('#application.configBean.getReadOnlyDatasource()#');
@@ -254,18 +259,39 @@ component extends="Slatwall.org.Hibachi.HibachiController" {
 											ORDER BY Swvendor.vendorName;");
 				rc.vendorList = result.getResult();
 			}else{
+			
 				// return data for report
 				var vendorPoList = "";
 				rc.vendorPoList = vendorPOData(rc.vendorSelect);
 				//writeDump(var="#rc.vendorPoList#" abort=true);
 			
-			
-			
-			
 			}
 		
 		
 		}
+		
+		public function postageReport () {
+			if(structKeyExists(rc, "postageReportStartDate") && structKeyExists(rc, "postageReportEndDate")){
+	 			rc.postageReportData = postageReportQuery(rc, rc.postageReportStartDate, rc.postageReportEndDate);
+	 			//writeDump(var="#rc.postageReportData#", abort=true);
+				return rc.postageReportData;
+			}
+		}
+		
+		private query function postageReportQuery (required struct rc, required date startDate, required date endDate) {
+	 	var result = "";
+	 	var postageReportQuery = new query();
+	 	postageReportQuery.setDatasource('#application.configBean.getReadOnlyDatasource()#');
+	 	postageReportQuery.addParam(name="startDate",value="#arguments.startDate# 00:00:00",cfsqltype="cf_sql_timestamp");
+		postageReportQuery.addParam(name="endDate",value="#arguments.endDate# 23:59:59",cfsqltype="cf_sql_timestamp");
+	 	result = postageReportQuery.execute(sql="select Sum(fulfillmentCharge) as postageTotal from sworder, sworderfulfillment
+												WHERE orderCloseDateTime BETWEEN :startDate AND :endDate
+												AND sworderfulfillment.orderID = sworder.orderID");
+							
+		rc.postageReport = result.getResult();
+		//writeDump(var="#rc.postageReport#" abort=true);
+	 	return result.getResult();										
+	 }
 		
 		// getFW().redirect(action="aca_ReorderReport:main.getreorderData");
 	}	

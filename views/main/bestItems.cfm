@@ -32,6 +32,7 @@
 	<cfset cogsTotals = 0 />
 	<cfset netTotals = 0 />
 	<cfset avgGrossTotals = 0 />
+	<cfset memberStatus = "" />
 	<cfset memberTypeCogsTotals = 0 />
 	<cfset memberTypeAvgGrossTotals = 0 />
 	<cfset memberTypeNetTotals = 0 />
