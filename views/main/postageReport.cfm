@@ -28,7 +28,28 @@
  		});
  	</script>
 <cfelse>
-<!--- <cfdump var="#rc.postageReportData#" abort=true> --->
+ <!--- <cfdump var="#rc#" top=2 abort=true>  --->
+<h3>Order Counts</h3>
+<table class="table table-condensed table-bordered table-striped" id="bestItemReport">
+	<thead>
+		<tr>
+			<th>Date Range</th>
+			<th>Order Type</th>
+			<th>Count</th>
+		</tr>
+	</thead>
+	
+	<tbody>	
+		<cfloop query="#rc.orderCountData#">
+		<tr>
+			<td><b>#rc.postageReportStartDate# - #rc.postageReportEndDate#</b></td>
+			<td>#orderType#</td>
+			<td>#orderIDCount#</td>
+		</tr>
+		</cfloop>
+	</tbody>
+</table>
+<h3>Postage Amount</h3>
 <table class="table table-condensed table-bordered table-striped" id="bestItemReport">
 	<thead>
 		<tr>
@@ -43,9 +64,7 @@
 			<cfloop query="#rc.postageReportData#">
 			<td>#dollarFormat(postageTotal)#</td>
 			</cfloop>
-		</tr>
-				
-		
+		</tr>	
 	</tbody>
 </table>
 </cfif>

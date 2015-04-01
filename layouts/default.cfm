@@ -328,6 +328,11 @@ Notes:
 		<div class="container-fluid">
 			<div class="row-fluid">
 				<div class="span12">
+					<cfif structKeyExists(url, "slatAction") and url.slataction neq "aca_SalesReports:main">
+						<div style="padding: 5px;">
+							<a href="?slatAction=aca_SalesReports:main" class="btn btn-primary">Return to Report Menu</a>
+						</div>
+					</cfif>
 					#body#
 				</div>
 			</div>
