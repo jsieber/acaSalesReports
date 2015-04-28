@@ -47,7 +47,20 @@ public function getOpenPos (required string skuCode) {
 			</tr>
 		</table>
 	</cfif>
-	
+	<cfif structKeyExists(url, "print")>
+		<style>
+			table {
+				border-collapse: collapse;
+			}
+			table, th, tr, td  { 
+				border: 1px solid LightGray;
+			}
+			thead {
+				display: table-header-group;
+			}
+		</style>
+		<p><strong>Reorder Report</strong> printed on #DateFormat(Now(), "m/d/yyyy")#</p>
+	</cfif>	
 	<table class="table table-condensed table-bordered table-striped tablesorter" id="reorderReport">
 		<thead>
 		<!--- <tr>

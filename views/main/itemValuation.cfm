@@ -21,36 +21,58 @@
 		<cfset EXPtotal = 0>
 		<cfset GrandTotal = 0>
 		<cfset i = 1>
-		
+		<cfif not structKeyExists(url, "print")>
+		<p><a href="#buildUrl('main.itemValuation&print')#">Print View</a><p>
 		<table class="table table-condensed table-bordered table-striped">
 			<tr class="error">
 				<td>Records in red indicated that the sku does not have a unit cost value entered!</td>
 			</tr>
 		</table>
-		
+		</cfif>
+		<cfif structKeyExists(url, "print")>
+		<style>
+			table {
+				border-collapse: collapse;
+			}
+			table, th, tr, td  { 
+				border: 1px solid LightGray;
+			}
+			thead {
+				display: table-header-group;
+			}
+			a:link, a:visited {
+    			text-decoration: none; 
+				color: black;
+			}
+		</style>
+		<p><strong>Item Valuation Report</strong> printed on #DateFormat(Now(), "m/d/yyyy")#</p>
+		</cfif>	
 		<table class="table table-condensed table-bordered table-striped">
-			<tr>
+			<!---<tr>
 				<th colspan="6" align="right">Reorder Items</th>
-			</tr>
+			</tr>--->
+			<thead>
 			<tr>
-				<td>Item No.</td>
-				<td>Item Name</td>
-				<td>Vendor No. and Name</td>
-				<td>Amount On Hand</td>
-				<td>Unit Cost</td>
-				<td>Extended Cost</td>
+				<th>Item No.</th>
+				<th>Item Name</th>
+				<th>Vendor No. and Name</th>
+				<th>Amount On Hand</th>
+				<th>Unit Cost</th>
+				<th>Extended Cost</th>
 			</tr>
+			</thead>
 			<cfset prefix = "">
 			<cfloop query="rc.itemValuationData">
 				<cfif mid(skuCode,1,2) NEQ prefix>
 					<cfif i NEQ 1>
-						<tr>
-							<td colspan="4"><b>#prefix# totals:</b></td>
-							<td><b>#DollarFormat(UNItotal)#</b></td>
-							<td><b>#DollarFormat(EXPtotal)#</b></td>	
+						<tr class="TOTALROW">
+							<td colspan="3">&nbsp;</td>
+							<td>#prefix# totals:</td>
+							<td align="right">#DollarFormat(UNItotal)#</td>
+							<td align="right">#DollarFormat(EXPtotal)#</td>
+								<cfset UNItotal = 0>
+								<cfset EXPtotal = 0>
 						</tr>
-						<cfset UNItotal = 0>
-						<cfset EXPtotal = 0>
 					</cfif>
 					<cfset prefix = mid(skuCode,1,2)>
 					<tr>
@@ -71,25 +93,26 @@
 						<td>#dollarFormat(extendedCost)#</td>	
 					</tr>
 				<cfset UNItotal = UNItotal + numberFormat(unitCost) />
-				<cfset EXPtotal = EXPtotal + extendedCost />
+				<cfset EXPtotal = EXPtotal +extendedCost />
 				<cfset GrandTotal = GrandTotal + extendedCost />
 				<cfset i = i +1>
 			</cfloop>
-			<tr>
-				<td colspan="4"><b>#prefix# totals:</b></td>
-				<td><b>#DollarFormat(UNItotal)#</b></td>
-				<td><b>#DollarFormat(EXPtotal)#</b></td>	
+			<tr class="TOTALROW">
+				<td colspan="3">&nbsp;</td>
+				<td>#prefix# totals:</td>
+				<td align="right">#DollarFormat(UNItotal)#</td>
+				<td align="right">#DollarFormat(EXPtotal)#</td>
+					<cfset UNItotal = 0>
+					<cfset EXPtotal = 0>
 			</tr>
-			<cfset UNItotal = 0 />
-			<cfset EXPtotal = 0 />
-			<tr >
-				<td colspan="6">&nbsp;</td>
+			<tr bgcolor="##000000" class="TINYTEXT">
+				<td colspan="6" height="1">&nbsp;</td>
 			</tr>
-			<tr>
-				<td colspan="5" ><b>Total Extended Costs:</b></td>
-				<td><b>#DollarFormat(grandTotal)#</b></td>
+			<tr class="TOTALROW">
+				<td colspan="5" align="right">Total Extended Costs:</td>
+				<td align="right">#DollarFormat(grandTotal)#</td>
 			</tr>
-		</table>
+		
 	<cfelse>
 		<p class="alert alert-danger">No records exist for the criteria defined!</p>
 	</cfif>

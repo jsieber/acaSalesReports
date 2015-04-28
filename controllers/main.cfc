@@ -10,9 +10,8 @@ Notes:
 component extends="Slatwall.org.Hibachi.HibachiController" {
 	 // Set security for plugin
 	 this.publicMethods=""; //Anyone can access
-	 this.anyAdminMethods="bestItems,getOpenPos,itemValuation,reorderReport,postageReport,vendorPOReport,postageReport"; //Any admin can access
-	 this.secureMethods="bestItems,getOpenPos,itemValuation,reorderReport,postageReport,vendorPOReport,postageReport"; //Only super admin and those who have access to this in permission group can access
-
+	 this.anyAdminMethods="bestItems,bestItemsPriceGroup,getOpenPos,itemValuation,itemValuationMountaineers,reorderReport,postageReport,vendorPOReport,postageReport"; //Any admin can access
+	 this.secureMethods="bestItems,bestItemsPriceGroup,getOpenPos,itemValuation,itemValuationMountaineers,reorderReport,postageReport,vendorPOReport,postageReport"; //Only super admin and those who have access to this in permission group can access
 	 
 	 public function bestItems (){
 	 	if(structKeyExists(rc, "bestItemsStartDate") && structKeyExists(rc, "bestItemsEndDate")){
@@ -70,6 +69,65 @@ component extends="Slatwall.org.Hibachi.HibachiController" {
 		rc.bestItems = result.getResult();
 		//writeDump(var="#rc.bestItems#" abort=true);
 	 	return rc.bestItems;										
+	 	
+	 
+	 }
+	
+	public function bestItemsPriceGroup (){
+	 	if(structKeyExists(rc, "bestItemsPriceGroupStartDate") && structKeyExists(rc, "bestItemsPriceGroupEndDate")){
+	 		rc.bestItemsPriceGroupData = bestItemsPriceGroupQuery(rc, rc.bestItemsPriceGroupStartDate, rc.bestItemsPriceGroupEndDate);
+	 		//writeDump(var="#rc.bestItemsPriceGroupData#", abort=true);
+			return rc.bestItemsPriceGroupData;
+	 	}
+	 }
+	 
+	 private query function bestItemsPriceGroupQuery (required struct rc, required date startDate, required date endDate) {
+	 	var result = "";
+	 	var bestItemsPriceGroupQuery = new query();
+	 	bestItemsPriceGroupQuery.setDatasource('#application.configBean.getReadOnlyDatasource()#');
+	 	bestItemsPriceGroupQuery.addParam(name="startDate",value="#arguments.startDate# 00:00:00",cfsqltype="cf_sql_timestamp");
+		bestItemsPriceGroupQuery.addParam(name="endDate",value="#arguments.endDate# 23:59:59",cfsqltype="cf_sql_timestamp");
+	 	result = bestItemsPriceGroupQuery.execute(sql="select If(PGroup Is Null, 'No Price Group',PGroup) AS Mem,Left(skuCode,2) AS SalesGroup, swsku.skuCode, Concat_WS('-',productName, OptionName) AS ProdName, Sum(quantity) AS NumSent, 
+												If(IsNull(NumRet),0,NumRet) AS NumRet,Sum(quantity)-If(IsNull(NumRet),0,NumRet) AS NumSold, 
+												Round((Sum(quantity*sworderitem.Price))/Sum(quantity),2) AS AvgCost, attributevalue AS UnitCost, Sum(quantity*attributevalue) AS COGS, 							
+												If(IsNull(Refunded),0,Refunded) AS RetDollarAmt, Sum(quantity*sworderitem.Price) AS Gross, 
+												(Sum(quantity*sworderitem.Price))-(Sum(quantity*attributevalue)) AS Net 
+												from sworder 
+												INNER JOIN sworderitem ON sworder.orderID = sworderitem.orderID 
+												INNER JOIN swsku ON sworderitem.skuID = swsku.skuID 
+												INNER JOIN swattributevalue ON sworderitem.skuID = swattributevalue.skuID 
+												INNER JOIN swproduct ON swsku.productID = swproduct.productID 
+												
+												LEFT JOIN (select skuID, Sum(quantity) AS NumRet, Sum((-quantity)*sworderitem.Price) AS Refunded 
+												from sworder 
+												INNER JOIN sworderitem ON sworder.orderID = sworderitem.orderID 
+												WHERE orderCloseDateTime BETWEEN :startDate AND :endDate 
+												AND orderstatustypeID = '444df2b8b98441f8e8fc6b5b4266548c' 
+												AND orderTypeID = '444df2dd05a67eab0777ba14bef0aab1' 
+												Group by skuID) AS Returneditems ON sworderitem.skuID = returneditems.skuID 
+												
+												LEFT JOIN (SELECT skuID, GROUP_CONCAT(DISTINCT SwOption.optionName SEPARATOR ' - ') as OptionName 
+												From swoption 
+												INNER JOIN swskuoption ON swoption.optionID = swskuoption.optionID 
+												Group by skuID) AS OptionList 
+												ON sworderitem.skuID = OptionList.skuID 
+												
+												LEFT JOIN (select swaccount.accountID, pricegroupname AS PGroup 
+												FROM swaccount 
+												INNER JOIN swaccountpricegroup ON swaccount.accountiD = swaccountpricegroup.accountid 
+												INNER JOIN swpricegroup ON swaccountpricegroup.pricegroupID = swpricegroup.pricegroupID) AS pricegroup 
+												ON sworder.accountID = pricegroup.accountID 
+												
+												WHERE orderCloseDateTime BETWEEN :startDate AND :endDate 
+												AND attributeID = '8a4b0819480b3df801481f0b48462fd4' 
+												AND orderstatustypeID = '444df2b8b98441f8e8fc6b5b4266548c' 
+												AND orderTypeID = '444df2df9f923d6c6fd0942a466e84cc' 
+												Group by Mem, skuCode 
+												ORDER BY Mem, skuCode");
+												
+		rc.bestItemsPriceGroup = result.getResult();
+		//writeDump(var="#rc.bestItemsPriceGroup#" abort=true);
+	 	return rc.bestItemsPriceGroup;										
 	 	
 	 
 	 }
@@ -141,6 +199,50 @@ component extends="Slatwall.org.Hibachi.HibachiController" {
 														GROUP BY swSku.skuid
 														ORDER BY SwSku.skuCode;");
 		 		rc.itemValuationData = result.getResult();
+		 
+		 
+		 
+		//}
+	 }
+	 
+	  public function itemValuationMountaineers (required struct rc) {
+	 	
+	 	// if (structKeyExists(rc, "submit")){
+	 		// writeDump(var="#rc#", abort=true, top=1);
+		 	var result = "";
+		 	var itemValuationMountaineersQuery = new query();
+		 	itemValuationMountaineersQuery.setDatasource('#application.configBean.getReadOnlyDatasource()#');
+		 	// itemValuationMountaineersQuery.addParam(name="startNumber",value="#rc.startNumber#",cfsqltype="cf_sql_varchar");
+		 	// itemValuationMountaineersQuery.addParam(name="endNumber",value="#rc.endNumber#",cfsqltype="cf_sql_varchar");
+		 		result = itemValuationMountaineersQuery.execute(sql="SELECT z_Mountaineersstock.MountaineersID, 
+														z_Mountaineersstock.skuCode, 
+														z_Mountaineersstock.skuQATS, 
+														z_Mountaineersstock.productName, 
+														SwProduct.productID, 
+														GROUP_CONCAT(DISTINCT SwOption.optionName ORDER BY SWOption.optionName DESC SEPARATOR ' - ') as OptionName, 
+														SwProductType.productTypeID, 
+														SwProductType.productTypeName, 
+														SwAttributeValue.attributeValue as unitCost, 
+														(SwAttributeValue.attributeValue * z_Mountaineersstock.skuQATS) as extendedCost 
+														FROM z_Mountaineersstock 
+														INNER JOIN 
+														swsku on z_Mountaineersstock.skuCode = swsku.skuCode 
+														INNER JOIN 
+														SwProduct on SwSku.productID = SwProduct.productID 
+														INNER JOIN 
+														SwProductType on SwProduct.productTypeID = SwProductType.productTypeID 
+														LEFT JOIN 
+														SwSkuOption on SwSku.skuID = SwSkuOption.skuID 
+														LEFT JOIN 
+														SwOption on SwSkuOption.optionID = SwOption.optionID 
+														LEFT JOIN 
+														SwattributeValue on SwSku.skuID = SwattributeValue.skuID 
+														LEFT JOIN 
+														Swattribute on SwattributeValue.attributeID = Swattribute.attributeID 
+														WHERE Swattribute.attributecode = 'unitCost' 	
+														GROUP BY z_Mountaineersstock.MountaineersID 
+														ORDER BY z_Mountaineersstock.skuCode;");
+		 		rc.itemValuationMountaineersData = result.getResult();
 		 
 		 
 		 
@@ -232,10 +334,10 @@ component extends="Slatwall.org.Hibachi.HibachiController" {
 													INNER JOIN
 														SwStock on SwVendorOrderItem.stockID = SwStock.stockID
 													LEFT JOIN
-														SwStockReceiverSum on SwStock.stockID = SwStockReceiverSum.stockID
+														SwStockReceiverSum on swvendororderitem.vendororderitemID = SwStockReceiverSum.vendororderitemID
 													WHERE ( Swvendor.vendorId = :vendorId )
 													GROUP BY SwvendorOrder.vendorOrderID	
-													ORDER BY SwVendorOrder.createdDateTime");
+													ORDER BY SwVendorOrder.createdDateTime DESC");
 				rc.vendorPoList = result.getResult();
 				// writeDump(var="#rc.vendorPoList#" abort=true);
 				return rc.vendorPoList;
